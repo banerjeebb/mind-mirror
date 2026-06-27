@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum ExamType {
+  JEE
+  NEET
+  CUET
+  GATE
+  UPSC
+  CAT
+}
+
+enum RitualType {
+  BREATHING
+  JOURNALING
+  MOVEMENT
+  REST
+  FOCUS_RESET
+  MOTIVATION
+}
+
+model User {
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  email    String   @unique
+  password String
+  examType ExamType
+  examDate DateTime
+
+  journals Journal[]
+  insights Insight[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+type EmotionVector {
+  x Float
+  y Float
+}
+
+model Journal {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String        @db.ObjectId
+  entryText      String
+  mood           Int
+  energyLevel    Int
+  emotionTags    String[]
+  triggerWords   String[]
+  sentimentScore Float
+  emotionVector  EmotionVector
+
+  user    User     @relation(fields: [userId], references: [id])
+  insight Insight?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Insight {
+  id              String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String     @db.ObjectId
+  journalId       String     @unique @db.ObjectId
+  hiddenPattern   String
+  copingRitual    String
+  ritualType      RitualType
+  ritualCompleted Boolean    @default(false)
+
+  user    User    @relation(fields: [userId], references: [id])
+  journal Journal @relation(fields: [journalId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
